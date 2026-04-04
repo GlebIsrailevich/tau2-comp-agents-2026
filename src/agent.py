@@ -70,9 +70,16 @@ class Agent:
         )
 
         self.history.append(HumanMessage(content=input_text))
-        response = self.llm.invoke(self.history)
-        reply = response.content
-        self.history.append(AIMessage(content=reply))
+
+        try:
+            response = await self.llm.ainvoke(self.history)
+            reply = response.content
+            self.history.append(AIMessage(content=reply))
+        except Exception as e:
+            # Fallback response for API errors
+            print(f"LLM API error: {e}")
+            reply = '{"name": "error", "arguments": {"message": "Service temporarily unavailable"}}'
+            self.history.append(AIMessage(content=reply))
 
         await updater.add_artifact(
             parts=[Part(root=TextPart(text=reply))],
