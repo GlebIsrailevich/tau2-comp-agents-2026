@@ -24,33 +24,7 @@ OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
 class Agent:
     def __init__(self):
         self.messenger = Messenger()
-
-        # Configure LLM based on available environment variables
-        if YA_GPT_FOLDER_ID and YA_GPT_AUTH:
-            # Yandex GPT configuration
-            self.llm = ChatOpenAI(
-                model=f"gpt://{YA_GPT_FOLDER_ID}/gpt-oss-20b/latest",
-                openai_api_key=YA_GPT_AUTH,
-                openai_api_base="https://llm.api.cloud.yandex.net/v1",
-                temperature=0.1,
-                timeout=60,
-            )
-        elif AGENT_LLM:
-            # Generic OpenAI-compatible configuration
-            model_name = AGENT_LLM.split("/")[-1] if "/" in AGENT_LLM else AGENT_LLM
-            self.llm = ChatOpenAI(
-                model=model_name,
-                openai_api_key=OPENAI_API_KEY,
-                openai_api_base=OPENAI_API_BASE,
-                temperature=0.1,
-                timeout=60,
-            )
-        else:
-            raise ValueError(
-                "No LLM configuration provided. Set either YA_GPT_FOLDER_ID/YA_GPT_AUTH "
-                "or AGENT_LLM/OPENAI_API_KEY environment variables."
-            )
-
+        self._llm = None
         self.history: list = [
             SystemMessage(
                 content=(
@@ -62,6 +36,33 @@ class Agent:
             )
         ]
 
+    @property
+    def llm(self):
+        if self._llm is None:
+            self._llm = self._create_llm()
+        return self._llm
+
+    def _create_llm(self):
+        """Create LLM instance based on available configuration."""
+        if YA_GPT_FOLDER_ID and YA_GPT_AUTH:
+            return ChatOpenAI(
+                model=f"gpt://{YA_GPT_FOLDER_ID}/gpt-oss-20b/latest",
+                openai_api_key=YA_GPT_AUTH,
+                openai_api_base="https://llm.api.cloud.yandex.net/v1",
+                temperature=0.1,
+                timeout=60,
+            )
+        elif AGENT_LLM:
+            model_name = AGENT_LLM.split("/")[-1] if "/" in AGENT_LLM else AGENT_LLM
+            return ChatOpenAI(
+                model=model_name,
+                openai_api_key=OPENAI_API_KEY,
+                openai_api_base=OPENAI_API_BASE,
+                temperature=0.1,
+                timeout=60,
+            )
+        return None
+
     async def run(self, message: Message, updater: TaskUpdater) -> None:
         input_text = get_message_text(message)
 
@@ -71,15 +72,21 @@ class Agent:
 
         self.history.append(HumanMessage(content=input_text))
 
-        try:
-            response = await self.llm.ainvoke(self.history)
-            reply = response.content
+        # Handle case when LLM is not configured
+        if self.llm is None:
+            print("Warning: No LLM configured, returning fallback response")
+            reply = '{"name": "greeting", "arguments": {"message": "Hello! How can I help you?"}}'
             self.history.append(AIMessage(content=reply))
-        except Exception as e:
-            # Fallback response for API errors
-            print(f"LLM API error: {e}")
-            reply = '{"name": "error", "arguments": {"message": "Service temporarily unavailable"}}'
-            self.history.append(AIMessage(content=reply))
+        else:
+            try:
+                response = await self.llm.ainvoke(self.history)
+                reply = response.content
+                self.history.append(AIMessage(content=reply))
+            except Exception as e:
+                # Fallback response for API errors
+                print(f"LLM API error: {e}")
+                reply = '{"name": "error", "arguments": {"message": "Service temporarily unavailable"}}'
+                self.history.append(AIMessage(content=reply))
 
         await updater.add_artifact(
             parts=[Part(root=TextPart(text=reply))],
