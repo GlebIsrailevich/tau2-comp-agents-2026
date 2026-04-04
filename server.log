@@ -1,0 +1,13 @@
+INFO:     Started server process [30084]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:9009 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51599 - "GET /.well-known/agent-card.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37136 - "GET /.well-known/agent-card.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37137 - "GET /.well-known/agent-card.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37142 - "GET /.well-known/agent-card.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37142 - "POST / HTTP/1.1" 200 OK
+Task failed with agent error: Error code: 401 - {'error': {'message': "rpc error: code = Unauthenticated desc = Unknown api key '****'", 'type': 'authentication_error'}}
+INFO:     127.0.0.1:37150 - "GET /.well-known/agent-card.json HTTP/1.1" 200 OK
+Task failed with agent error: Error code: 401 - {'error': {'message': "rpc error: code = Unauthenticated desc = Unknown api key '****'", 'type': 'authentication_error'}}
+INFO:     127.0.0.1:37150 - "POST / HTTP/1.1" 200 OK

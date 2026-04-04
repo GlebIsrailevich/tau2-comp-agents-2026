@@ -1,0 +1,32 @@
+{
+  manifest_version: "0.1.0",
+  program: {
+    image: "ghcr.io/rdi-foundation/tau2-purple-agentbeats:latest",
+    entrypoint: ["uv", "run", "src/server.py", "--host", "0.0.0.0", "--port", "9009"],
+    env: {
+      YA_GPT_FOLDER_ID: "${config.ya_gpt_folder_id}",
+      YA_GPT_AUTH: "${config.ya_gpt_auth}",
+      LOG_LEVEL: "INFO",
+    },
+    network: {
+      endpoints: [
+        { name: "endpoint", port: 9009 }
+      ]
+    }
+  },
+  config_schema: {
+    type: "object",
+    properties: {
+      ya_gpt_folder_id: { type: "string", secret: true },
+      ya_gpt_auth: { type: "string", secret: true },
+    },
+    required: ["ya_gpt_folder_id", "ya_gpt_auth"],
+    additionalProperties: false,
+  },
+  provides: {
+    a2a: { kind: "a2a", endpoint: "endpoint" }
+  },
+  exports: {
+    a2a: "a2a"
+  }
+}
