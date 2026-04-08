@@ -6,9 +6,10 @@
   config_schema: {
     type: "object",
     properties: {
-      my_api_key: { type: "string", secret: true },
+      ya_gpt_folder_id: { type: "string", secret: true },
+      ya_gpt_auth: { type: "string", secret: true },
     },
-    required: ["my_api_key"],
+    required: ["ya_gpt_folder_id", "ya_gpt_auth"],
     additionalProperties: false,
   },
 
@@ -25,7 +26,8 @@
 
     // TODO: Pass config values as environment variables
     env: {
-      MY_API_KEY: "${config.my_api_key}",
+      YA_GPT_FOLDER_ID: "${config.ya_gpt_folder_id}",
+      YA_GPT_AUTH: "${config.ya_gpt_auth}",
     },
 
     network: {
